@@ -1,35 +1,61 @@
-const pokemonLocal = [
-  { id: 1, nombre: "bulbasaur", hp: 45, nivel: 5, imagen: "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/1.png", tipos: ["planta", "veneno"] },
-  { id: 4, nombre: "charmander", hp: 39, nivel: 5, imagen: "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/4.png", tipos: ["fuego"] },
-  { id: 7, nombre: "squirtle", hp: 44, nivel: 5, imagen: "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/7.png", tipos: ["agua"] },
-  { id: 25, nombre: "pikachu", hp: 35, nivel: 12, imagen: "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/25.png", tipos: ["eléctrico"] },
-  { id: 39, nombre: "jigglypuff", hp: 115, nivel: 8, imagen: "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/39.png", tipos: ["normal", "hada"] },
-  { id: 133, nombre: "eevee", hp: 55, nivel: 10, imagen: "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/133.png", tipos: ["normal"] }
-];
+let pokedex = [];
 
-const nuevoPokemon = {
-  id: 150,
-  nombre: "mewtwo",
-  hp: 106,
-  nivel: 70,
-  imagen: "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/150.png",
-  tipos: ["psíquico"]
-};
-const listaAmpliada = [...pokemonLocal, nuevoPokemon];
+const nombresPokemon = ["bulbasaur", "charmander", "squirtle", "pikachu", "jigglypuff", "eevee"];
 
 const coloresPorTipo = {
   fuego: "bg-red-200 text-red-800",
+  fire: "bg-red-200 text-red-800",
   agua: "bg-blue-200 text-blue-800",
+  water: "bg-blue-200 text-blue-800",
   planta: "bg-green-200 text-green-800",
+  grass: "bg-green-200 text-green-800",
   eléctrico: "bg-yellow-200 text-yellow-800",
+  electric: "bg-yellow-200 text-yellow-800",
   veneno: "bg-purple-200 text-purple-800",
+  poison: "bg-purple-200 text-purple-800",
   normal: "bg-gray-200 text-gray-800",
   hada: "bg-pink-200 text-pink-800",
-  psíquico: "bg-fuchsia-200 text-fuchsia-800"
+  fairy: "bg-pink-200 text-pink-800",
+  psíquico: "bg-fuchsia-200 text-fuchsia-800",
+  psychic: "bg-fuchsia-200 text-fuchsia-800"
+};
+
+const traduccionTipos = {
+  grass: "planta",
+  poison: "veneno",
+  fire: "fuego",
+  water: "agua",
+  electric: "eléctrico",
+  normal: "normal",
+  fairy: "hada",
+  psychic: "psíquico"
 };
 
 const contenedor = document.getElementById("resultado");
 const buscador = document.getElementById("buscador");
+
+function mostrarSpinner() {
+  contenedor.innerHTML = `
+    <div class="col-span-full flex flex-col items-center justify-center py-12">
+      <div class="w-12 h-12 border-4 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
+      <p class="text-slate-600 mt-4 font-medium">Cargando Pokédex de la web...</p>
+    </div>
+  `;
+}
+
+function adaptarPokemon(data) {
+  const tiposTraducidos = data.types.map(t => traduccionTipos[t.type.name] || t.type.name);
+  const hpStat = data.stats.find(s => s.stat.name === "hp");
+
+  return {
+    id: data.id,
+    nombre: data.name,
+    imagen: data.sprites.other["official-artwork"].front_default || data.sprites.front_default || "https://via.placeholder.com/96?text=?",
+    tipos: tiposTraducidos,
+    hp: hpStat ? hpStat.base_stat : 50,
+    nivel: Math.floor(Math.random() * 20) + 5
+  };
+}
 
 function crearTarjeta(pokemon) {
   const { nombre, imagen, tipos, hp, nivel } = pokemon;
@@ -49,8 +75,8 @@ function crearTarjeta(pokemon) {
     <h2 class="capitalize font-bold text-slate-800 mt-2 text-lg">${nombre}</h2>
     <p class="text-xs text-slate-500 mb-1">Tipo principal: <span class="capitalize font-medium">${principal}</span></p>
     <div class="flex justify-center items-center gap-3 text-xs text-slate-600 mb-2 font-medium">
-      <span>Nivel: <strong class="text-slate-800">${nivel ?? 1}</strong></span>
-      <span>HP: <strong class="text-emerald-600">${hp ?? 50}</strong></span>
+      <span>Nivel: <strong class="text-slate-800">${nivel}</strong></span>
+      <span>HP: <strong class="text-emerald-600">${hp}</strong></span>
     </div>
     <div class="flex gap-1 justify-center mt-2 flex-wrap">
       ${badges}
@@ -74,10 +100,29 @@ function render(lista) {
   });
 }
 
+function cargarPokedex() {
+  mostrarSpinner();
+
+  const peticiones = nombresPokemon.map(nombre => 
+    fetch(`https://pokeapi.co/api/v2/pokemon/${nombre}`)
+      .then(respuesta => respuesta.json())
+      .then(datosApi => adaptarPokemon(datosApi))
+  );
+
+  Promise.all(peticiones)
+    .then(listaAdaptada => {
+      pokedex = listaAdaptada;
+      render(pokedex);
+    })
+    .catch(error => {
+      contenedor.innerHTML = `<p class="col-span-full text-center text-red-500 py-8">Error al cargar datos de la web.</p>`;
+    });
+}
+
 buscador.addEventListener("input", (e) => {
   const texto = e.target.value.toLowerCase().trim();
-  const filtrados = listaAmpliada.filter(p => p.nombre.toLowerCase().includes(texto));
+  const filtrados = pokedex.filter(p => p.nombre.toLowerCase().includes(texto));
   render(filtrados);
 });
 
-render(listaAmpliada);
+cargarPokedex();
