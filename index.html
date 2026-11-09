@@ -3,26 +3,26 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Pokédex - Lab 11</title>
+  <title>Pokédex Pro - Módulo 3</title>
   <script src="https://cdn.tailwindcss.com"></script>
 </head>
 <body class="bg-slate-100 min-h-screen p-6">
 
   <div class="max-w-4xl mx-auto">
-    <!-- Encabezado y Buscador -->
+    <!-- Encabezado y Buscador (Soporta nombre o ID) -->
     <header class="text-center mb-6">
-      <h1 class="text-3xl font-bold text-slate-800 mb-4">Pokédex</h1>
+      <h1 class="text-4xl font-extrabold text-slate-800 mb-4">Pokédex Pro</h1>
       
       <div class="flex max-w-md mx-auto gap-2">
         <input 
           type="text" 
           id="buscador" 
-          placeholder="Busca un Pokémon por nombre o ID..." 
+          placeholder="Busca un Pokémon por nombre o ID (ej: 25)..." 
           class="w-full p-3 rounded-lg border border-slate-300 shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
         >
         <button 
           id="btn-buscar" 
-          class="bg-blue-600 text-white px-5 py-3 rounded-lg hover:bg-blue-700 font-semibold transition"
+          class="bg-blue-600 text-white px-5 py-3 rounded-lg hover:bg-blue-700 font-semibold transition flex items-center gap-2"
         >
           Buscar
         </button>
@@ -30,22 +30,38 @@
     </header>
 
     <!-- Estado de la Pokédex Capturada -->
-    <section class="mb-6 bg-white p-4 rounded-xl shadow-sm text-center">
+    <section class="mb-4 bg-white p-4 rounded-xl shadow-sm text-center border border-slate-200">
       <h2 class="text-lg font-semibold text-slate-700">
         Mi Pokédex: <span id="contador-pokedex" class="text-blue-600 font-bold">0</span> Pokémon capturados
       </h2>
     </section>
 
+    <!-- ESTADOS DE UI: SPINNER Y MENSAJE DE ERROR/AVISO (HU3 & HU-RETO) -->
+    <div id="spinner" class="hidden text-center my-8">
+      <div class="inline-block animate-spin rounded-full h-10 w-10 border-4 border-blue-600 border-t-transparent"></div>
+      <p class="text-slate-500 mt-2 font-medium">Cargando Pokémon desde PokeAPI...</p>
+    </div>
+
+    <div id="mensaje" class="hidden bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded-xl my-4 text-center">
+      <span id="mensaje-texto" class="block font-medium"></span>
+      <button 
+        id="btn-reintentar" 
+        class="hidden mt-3 bg-red-600 text-white px-4 py-2 rounded-lg text-sm font-semibold hover:bg-red-700 transition"
+      >
+        🔄 Reintentar búsqueda
+      </button>
+    </div>
+
     <!-- Rejilla Principal de Pokémon -->
     <main id="resultado" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 mb-6">
-      <!-- Las tarjetas se renderizan aquí dinámicamente -->
+      <!-- Las tarjetas se renderizan dinámicamente -->
     </main>
 
-    <!-- Botón de Paginación HU5 -->
+    <!-- Botón de Paginación (HU-Reto: ?limit=12&offset=N) -->
     <div class="text-center">
       <button 
         id="btn-cargar-mas" 
-        class="bg-slate-800 text-white px-6 py-3 rounded-lg hover:bg-slate-900 font-semibold transition"
+        class="bg-slate-800 text-white px-6 py-3 rounded-lg hover:bg-slate-900 font-semibold transition shadow-md"
       >
         Cargar más Pokémon
       </button>
