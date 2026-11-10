@@ -19,7 +19,7 @@ const mensajeContainer = document.getElementById('mensaje');
 const mensajeTexto = document.getElementById('mensaje-texto');
 const btnReintentar = document.getElementById('btn-reintentar');
 
-// --- MANEJO DE ESTADOS DE UI (HU3) ---
+// --- MANEJO DE ESTADOS DE UI (HU3 y Retos) ---
 const mostrarCargando = () => {
   spinner.classList.remove('hidden');
   mensajeContainer.classList.add('hidden');
@@ -29,14 +29,10 @@ const ocultarCargando = () => {
   spinner.classList.add('hidden');
 };
 
-const mostrarError = (msg, permitirReintento = false) => {
+const mostrarError = (msg) => {
   mensajeTexto.textContent = msg;
   mensajeContainer.classList.remove('hidden');
-  if (permitirReintento) {
-    btnReintentar.classList.remove('hidden');
-  } else {
-    btnReintentar.classList.add('hidden');
-  }
+  btnReintentar.classList.remove('hidden'); // Muestra siempre el botón Reintentar ante un fallo
 };
 
 const limpiarErrores = () => {
@@ -44,7 +40,7 @@ const limpiarErrores = () => {
   btnReintentar.classList.add('hidden');
 };
 
-// --- ADAPTACIÓN DE DATOS DE LA API (HU4 - Stats) ---
+// --- ADAPTACIÓN DE DATOS DE LA API ---
 const adaptarPokemon = (data) => {
   const getStat = (nombreStat) => 
     data.stats.find(s => s.stat.name === nombreStat)?.base_stat || 0;
@@ -110,14 +106,14 @@ const render = (listaPokemon, append = false) => {
   }
 };
 
-// --- CONSULTA ASÍNCRONA A LA API CON TRY/CATCH/FINALLY (HU1, HU2, HU3) ---
+// --- CONSULTA ASÍNCRONA A LA API (HU1, HU2, HU3) ---
 
-// 1. Obtener un Pokémon específico por nombre o ID
+// 1. Consulta individual
 const obtenerPokemon = async (parametro) => {
   const url = `https://pokeapi.co/api/v2/pokemon/${parametro.toLowerCase()}`;
   const response = await fetch(url);
   
-  // HU2: Validación de response.ok para detectar el error HTTP 404
+  // HU2: Detección de respuesta 404
   if (!response.ok) {
     if (response.status === 404) {
       throw new Error(`No se encontró el Pokémon "${parametro}".`);
@@ -128,7 +124,7 @@ const obtenerPokemon = async (parametro) => {
   return await response.json();
 };
 
-// 2. Función principal de búsqueda
+// 2. Búsqueda principal
 const buscarPokemonEnAPI = async (query) => {
   if (!query.trim()) {
     offset = 0;
@@ -146,20 +142,20 @@ const buscarPokemonEnAPI = async (query) => {
     const pokemonAdaptado = adaptarPokemon(data);
     render([pokemonAdaptado]);
   } catch (error) {
-    // HU1 & HU2: Captura del error sin que falle la aplicación
+    // HU1 & Reto Reintento: Captura de error y despliegue del botón
     const esErrorRed = error.message.includes('Failed to fetch') || error.message.includes('NetworkError');
     const mensajeFinal = esErrorRed 
       ? 'Error de conexión a internet. Revisa tu red y vuelve a intentarlo.' 
       : error.message;
       
-    mostrarError(mensajeFinal, esErrorRed);
+    mostrarError(mensajeFinal);
   } finally {
-    // HU3: finally garantiza que el spinner siempre se oculte
+    // HU3: finally asegura que el spinner se oculte en todos los casos
     ocultarCargando();
   }
 };
 
-// 3. Carga inicial de Pokémon con paginación
+// 3. Carga inicial de la rejilla
 const cargarPokedexInicial = async () => {
   limpiarErrores();
   mostrarCargando();
@@ -176,19 +172,18 @@ const cargarPokedexInicial = async () => {
 
     render(listaAdaptada, offset > 0);
   } catch (error) {
-    mostrarError('No se pudo cargar la lista inicial. Verifica tu conexión.', true);
+    mostrarError('No se pudo cargar la lista inicial. Verifica tu conexión.');
   } finally {
     ocultarCargando();
   }
 };
 
-// --- CAPTURA DE POKÉMON EN ESTADO LOCAL (HU3 Lab 11) ---
+// --- CAPTURA DE POKÉMON EN ESTADO LOCAL ---
 window.capturarPokemon = (id, nombre, imagen) => {
   if (!pokedex.some(p => p.id === id)) {
     pokedex.push({ id, nombre, imagen });
     contadorPokedex.textContent = pokedex.length;
 
-    // Actualizar dinámicamente los botones en pantalla sin recargar
     const botones = document.querySelectorAll(`button[onclick*="${id}"]`);
     botones.forEach(btn => {
       btn.textContent = '✓ Capturado';
@@ -218,5 +213,5 @@ btnReintentar.addEventListener('click', () => {
   }
 });
 
-// Inicialización de la App
+// Inicialización
 cargarPokedexInicial();
