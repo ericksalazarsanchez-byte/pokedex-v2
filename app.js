@@ -19,12 +19,19 @@ const mensajeContainer = document.getElementById('mensaje');
 const mensajeTexto = document.getElementById('mensaje-texto');
 const btnReintentar = document.getElementById('btn-reintentar');
 
-// --- MANEJO DE ESTADOS DE UI ---
+// --- MANEJO DE ESTADOS DE UI (HU3 y Retos) ---
+const mostrarCargando = () => {
+  spinner.classList.remove('hidden');
+  mensajeContainer.classList.add('hidden');
+};
+
+const ocultarCargando = () => {
+  spinner.classList.add('hidden');
+};
+
 const mostrarError = (msg) => {
   mensajeTexto.textContent = msg;
-  mensajeContainer.classList.remove('hidden'); // Muestra el contenedor rojo
-  
-  // Forzamos la visibilidad del botón Reintentar quitando cualquier clase u ocultamiento
+  mensajeContainer.classList.remove('hidden');
   btnReintentar.classList.remove('hidden');
   btnReintentar.style.display = 'inline-block';
 };
@@ -108,7 +115,6 @@ const obtenerPokemon = async (parametro) => {
   const url = `https://pokeapi.co/api/v2/pokemon/${parametro.toLowerCase()}`;
   const response = await fetch(url);
   
-  // HU2: Detección de respuesta 404
   if (!response.ok) {
     if (response.status === 404) {
       throw new Error(`No se encontró el Pokémon "${parametro}".`);
@@ -119,7 +125,7 @@ const obtenerPokemon = async (parametro) => {
   return await response.json();
 };
 
-// Búsqueda principal
+// 2. Búsqueda principal
 const buscarPokemonEnAPI = async (query) => {
   if (!query.trim()) {
     offset = 0;
@@ -142,22 +148,8 @@ const buscarPokemonEnAPI = async (query) => {
       ? 'Error de conexión a internet. Revisa tu red y vuelve a intentarlo.' 
       : error.message;
       
-    // Llama a la función que fuerza la visualización del botón
     mostrarError(mensajeFinal);
   } finally {
-    ocultarCargando();
-  }
-};
-
-    // HU1 & Reto Reintento: Captura de error y despliegue del botón
-    const esErrorRed = error.message.includes('Failed to fetch') || error.message.includes('NetworkError');
-    const mensajeFinal = esErrorRed 
-      ? 'Error de conexión a internet. Revisa tu red y vuelve a intentarlo.' 
-      : error.message;
-      
-    mostrarError(mensajeFinal);
-  } finally {
-    // HU3: finally asegura que el spinner se oculte en todos los casos
     ocultarCargando();
   }
 };
