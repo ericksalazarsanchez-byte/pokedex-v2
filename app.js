@@ -19,25 +19,20 @@ const mensajeContainer = document.getElementById('mensaje');
 const mensajeTexto = document.getElementById('mensaje-texto');
 const btnReintentar = document.getElementById('btn-reintentar');
 
-// --- MANEJO DE ESTADOS DE UI (HU3 y Retos) ---
-const mostrarCargando = () => {
-  spinner.classList.remove('hidden');
-  mensajeContainer.classList.add('hidden');
-};
-
-const ocultarCargando = () => {
-  spinner.classList.add('hidden');
-};
-
+// --- MANEJO DE ESTADOS DE UI ---
 const mostrarError = (msg) => {
   mensajeTexto.textContent = msg;
-  mensajeContainer.classList.remove('hidden');
-  btnReintentar.classList.remove('hidden'); // Muestra siempre el botón Reintentar ante un fallo
+  mensajeContainer.classList.remove('hidden'); // Muestra el contenedor rojo
+  
+  // Forzamos la visibilidad del botón Reintentar quitando cualquier clase u ocultamiento
+  btnReintentar.classList.remove('hidden');
+  btnReintentar.style.display = 'inline-block';
 };
 
 const limpiarErrores = () => {
   mensajeContainer.classList.add('hidden');
   btnReintentar.classList.add('hidden');
+  btnReintentar.style.display = 'none';
 };
 
 // --- ADAPTACIÓN DE DATOS DE LA API ---
@@ -124,7 +119,7 @@ const obtenerPokemon = async (parametro) => {
   return await response.json();
 };
 
-// 2. Búsqueda principal
+// Búsqueda principal
 const buscarPokemonEnAPI = async (query) => {
   if (!query.trim()) {
     offset = 0;
@@ -142,6 +137,18 @@ const buscarPokemonEnAPI = async (query) => {
     const pokemonAdaptado = adaptarPokemon(data);
     render([pokemonAdaptado]);
   } catch (error) {
+    const esErrorRed = error.message.includes('Failed to fetch') || error.message.includes('NetworkError');
+    const mensajeFinal = esErrorRed 
+      ? 'Error de conexión a internet. Revisa tu red y vuelve a intentarlo.' 
+      : error.message;
+      
+    // Llama a la función que fuerza la visualización del botón
+    mostrarError(mensajeFinal);
+  } finally {
+    ocultarCargando();
+  }
+};
+
     // HU1 & Reto Reintento: Captura de error y despliegue del botón
     const esErrorRed = error.message.includes('Failed to fetch') || error.message.includes('NetworkError');
     const mensajeFinal = esErrorRed 
